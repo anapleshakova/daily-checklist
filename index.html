@@ -226,7 +226,8 @@ function lineChart(stats){
     if(m.date<first||m.date>last) return;
     var idx=0,found=false; for(var i=0;i<n;i++){ if(stats.ordered[i]>=m.date){idx=i;found=true;break;} }
     if(!found) idx=n-1; var x=xs(idx);
-    mk+='<line x1="'+x.toFixed(1)+'" y1="'+pad+'" x2="'+x.toFixed(1)+'" y2="'+(H-pad)+'" stroke="var(--ink)" stroke-width="1" stroke-dasharray="2 3" opacity="0.45"/>';
+    mk+='<line x1="'+x.toFixed(1)+'" y1="'+pad+'" x2="'+x.toFixed(1)+'" y2="'+(H-pad)+'" stroke="#2B2A24" stroke-width="2" stroke-dasharray="4 4" opacity="0.7"/>';
+    mk+='<circle cx="'+x.toFixed(1)+'" cy="'+(pad+2)+'" r="4.5" fill="#2B2A24" opacity="0.65"/>';
   });
   return '<svg viewBox="0 0 '+W+' '+H+'" width="100%" preserveAspectRatio="xMidYMid meet">'+grid+mk
     +'<path d="'+path(function(v){return v.mood;})+'" fill="none" stroke="var(--mood)" stroke-width="2.5"/>'
@@ -333,6 +334,22 @@ function slider(field,name,lo,hi,val,col){
     +'<div class="ends"><span>'+lo+'</span><span>'+hi+'</span></div></div>';
 }
 
+/* ---------------- marker legend ---------------- */
+function markerLegend(stats){
+  if(!state.markers||!state.markers.length||!stats.ordered||!stats.ordered.length) return "";
+  var first=stats.ordered[0], last=stats.ordered[stats.ordered.length-1];
+  var visible=state.markers.filter(function(m){ return m.date>=first&&m.date<=last; })
+    .sort(function(a,b){ return a.date<b.date?-1:1; });
+  if(!visible.length) return "";
+  return '<div style="margin-top:12px;display:flex;flex-direction:column;gap:6px;">'
+    +visible.map(function(m){
+      return '<div style="display:flex;align-items:center;gap:9px;font-size:12.5px;color:var(--inkSoft);">'
+        +'<span style="width:10px;height:10px;border-radius:99px;background:#2B2A24;opacity:0.6;flex-shrink:0;"></span>'
+        +'<span><strong style="color:var(--ink)">'+short(m.date)+'</strong>'
+        +(m.label?' \u2014 '+escapeHtml(m.label):'')+'</span></div>';
+    }).join("")+'</div>';
+}
+
 /* ---------------- trends ---------------- */
 function trendsView(){
   var s=statsFor(keysInWindow(trendRange));
@@ -346,11 +363,12 @@ function trendsView(){
     +statBox("Anxiety",s.avg.anxiety,trendTxt(s.trend.anxiety),"var(--anx)",arrowAnx)+'</div>';
 
   h+='<div class="card"><div class="label">Mood \u00b7 anxiety \u00b7 energy</div>'
-    +'<div class="sub">1\u201310 daily \u2014 dotted vertical lines are your markers.</div>'
+    +'<div class="sub">1\u201310 daily \u2014 dark dots mark your saved dates.</div>'
     +lineChart(s)
     +'<div class="legend"><span><i style="border-top:2.5px solid var(--mood)"></i>Mood</span>'
     +'<span><i style="border-top:2.5px solid var(--anx)"></i>Anxiety</span>'
-    +'<span><i style="border-top:2.5px dashed var(--energy)"></i>Energy</span></div></div>';
+    +'<span><i style="border-top:2.5px dashed var(--energy)"></i>Energy</span></div>'
+    +markerLegend(s)+'</div>';
 
   h+='<div class="card"><div class="label">Sleep</div>'+sleepChart(s)+'</div>';
 
